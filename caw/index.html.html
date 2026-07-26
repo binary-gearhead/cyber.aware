@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fsociety.awareness :: Cybersecurity Awareness</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root{
+  --bg:#08090a;
+  --bg-alt:rgba(14,16,18,0.75);
+  --panel:rgba(12,13,15,0.72);
+  --red:#ff2145;
+  --red-dim:#7a1027;
+  --red-glow:rgba(255,33,69,0.35);
+  --green:#39ff88;
+  --text:#d9dcdd;
+  --text-dim:#767c80;
+  --border:rgba(255,255,255,0.08);
+  --border-red:rgba(255,33,69,0.25);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html{scroll-behavior:smooth;}
+
+html{background:var(--bg);}
+body{
+  background:transparent;
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  line-height:1.6;
+  overflow-x:hidden;
+  cursor:none;
+}
+
+/* ---------- persistent full-page video backdrop ---------- */
+.site-bg{
+  position:fixed;
+  inset:0;
+  z-index:-2;
+  overflow:hidden;
+  background:#000;
+}
+#heroVideo{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  opacity:0.95;
+  filter:contrast(1.05) saturate(1.15);
+}
+.site-bg-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(8,9,10,0.25) 0%, rgba(8,9,10,0.4) 30%, rgba(8,9,10,0.55) 100%);
+}
+#soundToggle{
+  position:fixed;
+  bottom:24px;right:24px;
+  z-index:600;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  letter-spacing:1px;
+  padding:10px 14px;
+  background:rgba(8,9,10,0.65);
+  border:1px solid var(--border-red);
+  color:var(--text-dim);
+  cursor:none;
+  backdrop-filter:blur(4px);
+  transition:all .2s;
+}
+#soundToggle:hover{color:var(--red);border-color:var(--red);}
+
+::selection{background:var(--red);color:#000;}
+
+a{color:var(--red);text-decoration:none;}
+
+/* ---------- custom cursor ---------- */
+#cursor-dot, #cursor-ring{
+  position:fixed;
+  top:0;left:0;
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+}
+#cursor-dot{
+  width:5px;height:5px;
+  background:var(--red);
+  box-shadow:0 0 8px var(--red);
+}
+#cursor-ring{
+  width:26px;height:26px;
+  border:1px solid var(--red);
+  opacity:0.6;
+  transition:width .15s,height .15s,opacity .15s,border-color .15s;
+}
+body.cursor-active #cursor-ring{
+  width:40px;height:40px;
+  border-color:var(--green);
+  opacity:0.9;
+}
+@media (hover:none){
+  #cursor-dot,#cursor-ring{display:none;}
+  body{cursor:auto;}
+}
+
+/* ---------- scanline / noise overlay ---------- */
+.scanline-overlay{
+  position:fixed;inset:0;
+  pointer-events:none;
+  z-index:9000;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.015) 0px,
+    rgba(255,255,255,0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode:overlay;
+}
+
+/* ---------- nav ---------- */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:500;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 5%;
+  background:rgba(8,9,10,0.75);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-weight:700;
+  letter-spacing:1px;
+  font-size:14px;
+  color:var(--text);
+}
+.logo span{color:var(--red);}
+.nav-links{display:flex;gap:28px;font-size:12px;letter-spacing:.5px;}
+.nav-links a{color:var(--text-dim);transition:color .2s;}
+.nav-links a:hover{color:var(--red);}
+.nav-status{
+  font-size:10px;color:var(--green);
+  display:flex;align-items:center;gap:6px;
+}
+.dot-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+@media (max-width:800px){.nav-links{display:none;}}
+
+/* ---------- hero / glass pane ---------- */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding:120px 5% 60px;
+}
+
+.hero-content{
+  position:relative;
+  z-index:2;
+  max-width:920px;
+  width:100%;
+  padding:56px 48px;
+  background:rgba(10,11,13,0.42);
+  border:1px solid var(--border-red);
+  backdrop-filter:blur(6px) saturate(120%);
+  -webkit-backdrop-filter:blur(6px) saturate(120%);
+  box-shadow:0 0 60px rgba(255,33,69,0.08), inset 0 0 40px rgba(0,0,0,0.4);
+  text-align:left;
+}
+.glass-glare{
+  position:absolute;top:0;left:-30%;width:20%;height:100%;
+  background:linear-gradient(105deg, transparent, rgba(255,255,255,0.05), transparent);
+  pointer-events:none;
+}
+.eyebrow{
+  font-size:11px;letter-spacing:3px;color:var(--green);
+  margin-bottom:18px;
+  display:flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:'';width:24px;height:1px;background:var(--green);}
+h1.glitch{
+  font-family:'Space Mono',monospace;
+  font-size:clamp(2.2rem,6vw,4.4rem);
+  font-weight:700;
+  line-height:1.05;
+  color:#f2f2f2;
+  position:relative;
+  letter-spacing:-1px;
+  margin-bottom:22px;
+}
+h1.glitch span.hl{color:var(--red);}
+h1.glitch::before,h1.glitch::after{
+  content:attr(data-text);
+  position:absolute;top:0;left:0;width:100%;
+  overflow:hidden;
+  color:var(--text);
+}
+h1.glitch::before{
+  left:2px;text-shadow:-1px 0 var(--red);
+  animation:glitchTop 3.5s infinite linear alternate-reverse;
+}
+h1.glitch::after{
+  left:-2px;text-shadow:-1px 0 var(--green);
+  animation:glitchBot 4.5s infinite linear alternate-reverse;
+}
+@keyframes glitchTop{
+  0%{clip-path:inset(0 0 85% 0);} 20%{clip-path:inset(10% 0 60% 0);}
+  40%{clip-path:inset(70% 0 5% 0);} 60%{clip-path:inset(40% 0 40% 0);}
+  80%{clip-path:inset(90% 0 2% 0);} 100%{clip-path:inset(20% 0 70% 0);}
+}
+@keyframes glitchBot{
+  0%{clip-path:inset(60% 0 5% 0);} 25%{clip-path:inset(10% 0 80% 0);}
+  50%{clip-path:inset(85% 0 2% 0);} 75%{clip-path:inset(30% 0 50% 0);}
+  100%{clip-path:inset(5% 0 90% 0);}
+}
+.hero p.lede{
+  font-family:'Space Mono',monospace;
+  font-size:15px;
+  color:var(--text-dim);
+  max-width:560px;
+  margin-bottom:32px;
+}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap;}
+.btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:12px;letter-spacing:1px;
+  padding:14px 24px;
+  border:1px solid var(--red);
+  color:var(--red);
+  background:transparent;
+  cursor:none;
+  position:relative;
+  transition:all .25s;
+  text-transform:uppercase;
+}
+.btn:hover{background:var(--red);color:#08090a;box-shadow:0 0 24px var(--red-glow);}
+.btn.ghost{border-color:var(--border);color:var(--text-dim);}
+.btn.ghost:hover{border-color:var(--text);color:var(--text);background:transparent;box-shadow:none;}
+.hud{
+  display:flex;gap:26px;margin-top:38px;
+  padding-top:22px;border-top:1px solid var(--border);
+  font-size:10px;color:var(--text-dim);letter-spacing:.5px;flex-wrap:wrap;
+}
+.hud b{color:var(--green);display:block;font-size:13px;margin-bottom:2px;font-family:'Space Mono',monospace;}
+
+/* ---------- sections ---------- */
+section{
+  position:relative;
+  padding:100px 5%;
+  border-top:1px solid var(--border);
+  max-width:1180px;
+  margin:0 auto;
+}
+.sec-head{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-bottom:48px;flex-wrap:wrap;gap:16px;
+}
+.sec-tag{
+  font-size:11px;color:var(--red);letter-spacing:3px;margin-bottom:10px;
+  font-family:'Space Mono',monospace;
+}
+.sec-title{
+  font-size:clamp(1.6rem,3.4vw,2.4rem);
+  color:#f2f2f2;font-weight:700;
+  font-family:'Space Mono',monospace;
+}
+.sec-sub{font-size:13px;color:var(--text-dim);max-width:480px;text-align:right;}
+@media (max-width:700px){.sec-sub{text-align:left;}}
+
+/* threat matrix table */
+.matrix{border:1px solid var(--border);}
+.matrix-row{
+  display:grid;grid-template-columns:1.1fr 1.3fr 2fr 1.6fr;
+  border-bottom:1px solid var(--border);
+}
+.matrix-row.head{background:var(--bg-alt);font-size:11px;letter-spacing:1px;color:var(--text-dim);}
+.matrix-row:last-child{border-bottom:none;}
+.matrix-cell{padding:20px 18px;font-size:13px;border-right:1px solid var(--border);}
+.matrix-cell:last-child{border-right:none;}
+.level-tag{
+  font-family:'Space Mono',monospace;font-weight:700;font-size:13px;
+  display:inline-block;padding:4px 10px;margin-bottom:4px;
+}
+.level-local{color:var(--green);border:1px solid var(--green);}
+.level-medium{color:#ffc93c;border:1px solid #ffc93c;}
+.level-high{color:#ff7a1f;border:1px solid #ff7a1f;}
+.level-critical{color:var(--red);border:1px solid var(--red);background:rgba(255,33,69,0.08);}
+@media (max-width:800px){
+  .matrix-row{grid-template-columns:1fr;}
+  .matrix-cell{border-right:none;border-bottom:1px solid var(--border);}
+  .matrix-cell:last-child{border-bottom:none;}
+}
+
+/* threat cards */
+.threat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.threat-card{background:var(--panel);padding:32px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.threat-card h3{
+  font-family:'Space Mono',monospace;color:#f2f2f2;font-size:17px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.threat-card h3::before{content:'>';color:var(--red);}
+.threat-card ul{list-style:none;font-size:13px;color:var(--text-dim);}
+.threat-card ul li{padding:6px 0 6px 18px;position:relative;border-top:1px dashed var(--border);}
+.threat-card ul li:first-child{border-top:none;}
+.threat-card ul li::before{content:'—';position:absolute;left:0;color:var(--red);}
+.threat-card ul li b{color:var(--text);}
+.note-box{
+  margin-top:20px;padding:14px 16px;border-left:2px solid var(--green);
+  background:rgba(57,255,136,0.05);font-size:12px;color:var(--text-dim);
+}
+@media (max-width:800px){.threat-grid{grid-template-columns:1fr;}}
+
+/* everyday grid */
+.everyday-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-top:1px;}
+.everyday-card{background:var(--panel);padding:26px;font-size:13px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.everyday-card .num{font-family:'Space Mono',monospace;color:var(--red);font-size:11px;letter-spacing:1px;margin-bottom:10px;}
+.everyday-card h4{font-family:'Space Mono',monospace;color:#f2f2f2;font-size:15px;margin-bottom:10px;}
+.everyday-card p{color:var(--text-dim);font-size:12.5px;}
+@media (max-width:900px){.everyday-grid{grid-template-columns:1fr 1fr;}}
+@media (max-width:600px){.everyday-grid{grid-template-columns:1fr;}}
+
+/* incident case studies */
+.case{
+  display:grid;grid-template-columns:220px 1fr;gap:32px;
+  padding:28px 0;border-top:1px solid var(--border);
+}
+.case:first-of-type{border-top:none;}
+.case-meta{font-family:'Space Mono',monospace;}
+.case-year{color:var(--red);font-size:28px;font-weight:700;}
+.case-name{color:var(--text-dim);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-top:6px;}
+.case-body p{font-size:13.5px;color:var(--text-dim);}
+.case-body p b{color:var(--text);}
+@media (max-width:700px){.case{grid-template-columns:1fr;gap:10px;}}
+
+/* breach checker */
+.breach-wrap{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:40px;}
+.mock-browser{
+  border:1px solid var(--border);background:var(--bg-alt);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.mock-topbar{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);
+}
+.mock-topbar .mock-dot{width:9px;height:9px;border-radius:50%;background:#3a3a3a;}
+.mock-url{
+  flex:1;font-size:10px;color:var(--text-dim);background:#08090a;padding:5px 10px;margin-left:6px;border:1px solid var(--border);
+}
+.mock-body{padding:22px;font-size:12px;}
+.mock-body h5{font-family:'Space Mono',monospace;font-size:14px;color:#f2f2f2;margin-bottom:14px;}
+.mock-pill-bad{
+  display:inline-block;background:rgba(255,33,69,0.12);border:1px solid var(--red);color:var(--red);
+  padding:8px 12px;font-size:11px;margin-bottom:14px;letter-spacing:.5px;
+}
+.mock-pill-good{
+  display:inline-block;background:rgba(57,255,136,0.1);border:1px solid var(--green);color:var(--green);
+  padding:8px 12px;font-size:11px;margin-bottom:14px;letter-spacing:.5px;
+}
+.mock-breach-item{
+  border-left:2px solid var(--red);padding:8px 0 8px 12px;margin-bottom:8px;color:var(--text-dim);font-size:11.5px;
+}
+.mock-breach-item b{color:var(--text);display:block;font-size:12.5px;margin-bottom:2px;}
+.breach-copy p{font-size:13.5px;color:var(--text-dim);margin-bottom:16px;}
+@media (max-width:800px){.breach-wrap{grid-template-columns:1fr;}}
+
+/* laws */
+.law-cols{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);}
+.law-col{background:var(--panel);padding:30px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.law-col h4{
+  font-family:'Space Mono',monospace;color:var(--red);font-size:12px;letter-spacing:2px;margin-bottom:20px;
+  padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.law-item{padding:12px 0;border-bottom:1px dashed var(--border);font-size:12.5px;}
+.law-item:last-child{border-bottom:none;}
+.law-item .code{color:var(--green);font-family:'Space Mono',monospace;font-weight:700;font-size:12px;}
+.law-item p{color:var(--text-dim);margin-top:4px;}
+@media (max-width:800px){.law-cols{grid-template-columns:1fr;}}
+
+/* helpline */
+.helpline-banner{
+  background:linear-gradient(135deg, rgba(255,33,69,0.12), rgba(255,33,69,0.02));
+  border:1px solid var(--border-red);
+  padding:40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;
+  margin-bottom:40px;
+}
+.helpline-banner .num{font-family:'Space Mono',monospace;font-size:44px;color:var(--red);font-weight:700;}
+.helpline-banner .lbl{font-size:11px;color:var(--text-dim);letter-spacing:1px;margin-top:4px;}
+.steps-list{counter-reset:step;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.step-item{background:var(--panel);padding:22px 24px;font-size:13px;color:var(--text-dim);position:relative;padding-left:56px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.step-item::before{
+  counter-increment:step;content:counter(step,decimal-leading-zero);
+  position:absolute;left:18px;top:20px;font-family:'Space Mono',monospace;color:var(--red);font-size:16px;font-weight:700;
+}
+.step-item b{color:var(--text);}
+@media (max-width:700px){.steps-list{grid-template-columns:1fr;}}
+
+/* checklist */
+.checklist{columns:2;column-gap:40px;margin-top:20px;}
+.checklist .item{
+  break-inside:avoid;display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px;
+}
+.checklist .item::before{content:'[ ]';color:var(--green);font-family:'Space Mono',monospace;flex-shrink:0;}
+@media (max-width:700px){.checklist{columns:1;}}
+
+/* footer */
+footer{
+  border-top:1px solid var(--border);padding:50px 5% 30px;text-align:center;
+}
+footer .foot-logo{font-family:'Space Mono',monospace;color:var(--text-dim);font-size:12px;margin-bottom:10px;}
+footer .foot-note{font-size:11px;color:#4d5257;max-width:640px;margin:14px auto 0;line-height:1.7;}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--red-dim);}
+</style>
+</head>
+<body>
+
+<div class="site-bg">
+  <video id="heroVideo" autoplay muted loop playsinline>
+    <source src="mrrr.mp4" type="video/mp4">
+  </video>
+  <div class="site-bg-overlay"></div>
+</div>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+<div class="scanline-overlay"></div>
+
+<nav>
+  <div class="logo">fsociety<span>.</span>awareness</div>
+  <div class="nav-links">
+    <a href="#threats">threats</a>
+    <a href="#everyday">everyday</a>
+    <a href="#breach-check">breach_check</a>
+    <a href="#laws">laws</a>
+    <a href="#help">helpline</a>
+  </div>
+  <div class="nav-status"><span class="dot-pulse"></span>SESSION::ENCRYPTED</div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero">
+  <button id="soundToggle" type="button">🔇 ENABLE SOUND</button>
+  <div class="hero-content">
+    <div class="glass-glare"></div>
+    <div class="eyebrow">SYS_BOOT :: AWARENESS_PROTOCOL_v2026</div>
+    <h1 class="glitch" data-text="YOU ARE THE ATTACK SURFACE.">YOU ARE THE <span class="hl">ATTACK SURFACE.</span></h1>
+    <p class="lede">Every device you carry is a door. Most people never check if theirs is locked. This is a plain-language field guide to the threats that actually reach ordinary people — and the ones that don't — so you can stop guessing and start defending.</p>
+    <div class="hero-ctas">
+      <a href="#threats" class="btn">Enter the matrix</a>
+      <a href="#breach-check" class="btn ghost">Check my exposure</a>
+    </div>
+    <div class="hud">
+      <div><b>4</b>threat tiers mapped</div>
+      <div><b>60%+</b>breaches involve human error</div>
+      <div><b>1930</b>India cyber helpline</div>
+      <div><b>2026</b>report last updated</div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ THREAT MATRIX ============ -->
+<section id="threats">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">01 // CLASSIFICATION</div>
+      <div class="sec-title">How big is the threat, really?</div>
+    </div>
+    <div class="sec-sub">Not every attack belongs in the same panic bucket. Here's where things actually land, adapted from UK NCSC and US incident-severity frameworks.</div>
+  </div>
+
+  <div class="matrix">
+    <div class="matrix-row head">
+      <div class="matrix-cell">Tier</div>
+      <div class="matrix-cell">Usual target</div>
+      <div class="matrix-cell">Looks like</div>
+      <div class="matrix-cell">Real-world impact</div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-cell"><span class="level-tag level-local">LOCAL</span></div>
+      <div class="matrix-cell">Individuals, small shops</div>
+      <div class="matrix-cell">Phishing texts, spoofed café Wi-Fi, hijacked social accounts, tampered charging ports</div>
+      <div class="matrix-cell">A drained wallet, a locked account, an identity headache — usually resolved through your bank or the local cyber cell</div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-cell"><span class="level-tag level-medium">MEDIUM</span></div>
+      <div class="matrix-cell">Businesses, schools, local hospitals</div>
+      <div class="matrix-cell">Ransomware on a school network, a clinic's records leaking, staff-targeted phishing waves</div>
+      <div class="matrix-cell">Days of downtime, thousands of exposed records, recovery bills climbing into the lakhs</div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-cell"><span class="level-tag level-high">HIGH</span></div>
+      <div class="matrix-cell">Corporations, banks, major hospitals, infrastructure operators</div>
+      <div class="matrix-cell">Pipeline-grade ransomware, large-scale bank breaches, care-delaying hospital attacks</div>
+      <div class="matrix-cell">Nationwide disruption, millions of stolen records, damages in the tens or hundreds of crores</div>
+    </div>
+    <div class="matrix-row">
+      <div class="matrix-cell"><span class="level-tag level-critical">CRITICAL</span></div>
+      <div class="matrix-cell">Governments, defence, power grids, national data systems</div>
+      <div class="matrix-cell">Supply-chain compromises, state-sponsored espionage, grid or election-system intrusions</div>
+      <div class="matrix-cell">A matter of national security — intelligence agencies and international response get involved</div>
+    </div>
+  </div>
+  <div class="note-box">Most people will only ever meet the "Local" tier — and that's still painful. Knowing the difference stops you from either panicking or getting complacent.</div>
+</section>
+
+<!-- ============ PUBLIC WIFI + SOCIAL ============ -->
+<section id="wifi-social">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">02 // COMMON VECTORS</div>
+      <div class="sec-title">Where ordinary people actually get hit</div>
+    </div>
+    <div class="sec-sub">Two channels account for most everyday incidents: the networks you borrow, and the platforms you already trust.</div>
+  </div>
+
+  <div class="threat-grid">
+    <div class="threat-card">
+      <h3>Public Wi-Fi</h3>
+      <ul>
+        <li><b>Evil twin hotspots</b> — a network named almost exactly like the real one, built to catch anyone who isn't looking closely</li>
+        <li><b>Man-in-the-middle</b> — an attacker sitting between you and the sites you visit once you share their network</li>
+        <li><b>Fake captive portals</b> — a "sign in with Google/Facebook" login screen that exists only to harvest your credentials</li>
+        <li><b>Session hijacking</b> — stealing the token that keeps you logged in, without ever needing your password</li>
+      </ul>
+      <div class="note-box">HTTPS has closed most of the old "read your password over the air" attacks. What's left are the active tricks above — fake networks and fake logins, not passive snooping.</div>
+    </div>
+    <div class="threat-card">
+      <h3>Social Media</h3>
+      <ul>
+        <li><b>Fake support DMs</b> — urgent warnings that your account will be locked, linking to a convincing clone of the real login page</li>
+        <li><b>Credential stuffing</b> — passwords leaked elsewhere, tried against your accounts until one fits</li>
+        <li><b>Impersonation</b> — cloned or hijacked profiles pushing investment scams and "giveaways"</li>
+        <li><b>Oversharing</b> — pet names, schools, and travel plans quietly answer your own security questions for an attacker</li>
+        <li><b>AI-assisted scams</b> — cloned voices and deepfaked video making the con far more convincing than a typo-ridden email ever was</li>
+      </ul>
+      <div class="note-box">Account takeover is now one of the most common forms of identity crime the general public faces — and it rarely needs sophisticated tools, just your trust.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVERYDAY THINGS ============ -->
+<section id="everyday">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">03 // ATTACK SURFACE</div>
+      <div class="sec-title">The habits that quietly let attackers in</div>
+    </div>
+    <div class="sec-sub">Almost anything that connects to the internet can be turned against you if it's left on its defaults.</div>
+  </div>
+
+  <div class="everyday-grid">
+    <div class="everyday-card">
+      <div class="num">// 01</div>
+      <h4>Juice jacking</h4>
+      <p>A tampered public USB port can move data or malware the moment you plug in — it looks completely ordinary. Carry your own charger, or use a wall socket instead.</p>
+    </div>
+    <div class="everyday-card">
+      <div class="num">// 02</div>
+      <h4>Bluetooth left on</h4>
+      <p>Idle Bluetooth and "share with everyone" AirDrop settings open the door to tracking and unsolicited access. Switch both off when you're not actively using them.</p>
+    </div>
+    <div class="everyday-card">
+      <div class="num">// 03</div>
+      <h4>Smart home / IoT</h4>
+      <p>Cameras, plugs, and speakers often ship with weak default passwords and rarely get updated — a single compromised device can open your whole home network.</p>
+    </div>
+    <div class="everyday-card">
+      <div class="num">// 04</div>
+      <h4>Digital exhaust</h4>
+      <p>Boarding passes, house numbers, and casual check-ins build a profile attackers can use for password resets and eerily personalised phishing.</p>
+    </div>
+    <div class="everyday-card">
+      <div class="num">// 05</div>
+      <h4>Phishing, everywhere</h4>
+      <p>SMS, WhatsApp, email, or a phone call — the human element is present in the large majority of successful breaches. One OTP given away is often all it takes.</p>
+    </div>
+    <div class="everyday-card">
+      <div class="num">// 06</div>
+      <h4>Urgency as a weapon</h4>
+      <p>"Act now or lose access" is the single most reliable trick in the playbook. Genuine institutions rarely rush you — treat urgency itself as a red flag.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASE STUDIES ============ -->
+<section id="cases">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">04 // FIELD REPORTS</div>
+      <div class="sec-title">What "high" and "critical" look like</div>
+    </div>
+    <div class="sec-sub">Not everyday risks — but the reason the same basic hygiene matters at every scale, from your phone to a national grid.</div>
+  </div>
+
+  <div class="case">
+    <div class="case-meta">
+      <div class="case-year">2021</div>
+      <div class="case-name">Colonial Pipeline</div>
+    </div>
+    <div class="case-body">
+      <p><b>Entry point:</b> a single compromised VPN account with no multi-factor authentication. <b>What happened:</b> ransomware spread through IT systems, and out of caution the operator shut down a pipeline carrying roughly 45% of fuel to the U.S. East Coast. <b>Fallout:</b> fuel shortages, panic buying, and a $4.4 million ransom — a fair share of which was later recovered. The industrial control systems were never even touched; the disruption came entirely from the IT side.</p>
+    </div>
+  </div>
+  <div class="case">
+    <div class="case-meta">
+      <div class="case-year">2020</div>
+      <div class="case-name">SolarWinds</div>
+    </div>
+    <div class="case-body">
+      <p><b>Entry point:</b> malicious code slipped into a trusted software update used by thousands of organisations, including U.S. government agencies. <b>What happened:</b> installing the update quietly opened a backdoor into those networks. <b>Fallout:</b> widely attributed to a state-linked actor, and considered one of the most significant supply-chain compromises on record — proof that even well-defended organisations can be reached through a vendor they trust.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BREACH CHECK ============ -->
+<section id="breach-check">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">05 // SELF-DIAGNOSTIC</div>
+      <div class="sec-title">Has your data already leaked?</div>
+    </div>
+    <div class="sec-sub">A free, well-established tool called Have I Been Pwned lets anyone check whether an email address has surfaced in a known data breach.</div>
+  </div>
+
+  <div class="breach-wrap">
+    <div class="breach-copy">
+      <p>Type an email address in, and it's checked against a huge archive of confirmed breaches. If your address turns up, you'll see exactly which services leaked it and roughly what kind of data was exposed — passwords, phone numbers, sometimes more. If it doesn't, you get a clean bill of health for that address.</p>
+      <p>It's not a hacking tool and it doesn't store what you search in any way that's tied back to you for lookups. It's simply a mirror — worth checking every few months, especially for the email you use for banking.</p>
+      <a href="https://haveibeenpwned.com" target="_blank" rel="noopener" class="btn">Check your email →</a>
+    </div>
+    <div>
+      <div class="mock-browser" style="margin-bottom:20px;">
+        <div class="mock-topbar">
+          <div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div>
+          <div class="mock-url">haveibeenpwned.com</div>
+        </div>
+        <div class="mock-body">
+          <h5>Illustrative example — a breached address</h5>
+          <div class="mock-pill-bad">⚠ Oh no — pwned in 6 data breaches</div>
+          <div class="mock-breach-item"><b>Sample Forum Network (2019)</b>Email, password hash, IP address exposed</div>
+          <div class="mock-breach-item"><b>Sample Retail Co. (2021)</b>Email, phone number, purchase history exposed</div>
+          <div class="mock-breach-item"><b>Sample Social App (2023)</b>Email, username, plaintext password exposed</div>
+        </div>
+      </div>
+      <div class="mock-browser">
+        <div class="mock-topbar">
+          <div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div>
+          <div class="mock-url">haveibeenpwned.com</div>
+        </div>
+        <div class="mock-body">
+          <h5>Illustrative example — a clean address</h5>
+          <div class="mock-pill-good">✓ Good news — no breaches found</div>
+          <div class="mock-breach-item" style="border-left-color:var(--green);">No pwnage found for this address. Keep using unique passwords and MFA to keep it that way.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LAWS ============ -->
+<section id="laws">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">06 // LEGAL FRAMEWORK</div>
+      <div class="sec-title">Digital crime, physical penalties</div>
+    </div>
+    <div class="sec-sub">A screen doesn't make an offence less real. These are the laws that protect you as a victim — and apply just as much if you're ever the one crossing the line.</div>
+  </div>
+
+  <div class="law-cols">
+    <div class="law-col">
+      <h4>INDIA — IT ACT, 2000 (AS AMENDED)</h4>
+      <div class="law-item"><span class="code">SEC. 43 / 66</span><p>Unauthorised access or damage to computer systems. Civil compensation and criminal penalties.</p></div>
+      <div class="law-item"><span class="code">SEC. 66C</span><p>Identity theft — misusing someone's password or digital signature. Up to 3 years plus fine.</p></div>
+      <div class="law-item"><span class="code">SEC. 66D</span><p>Cheating by personation using a computer resource — classic online fraud. Up to 3 years plus fine.</p></div>
+      <div class="law-item"><span class="code">SEC. 66E</span><p>Violating privacy by capturing or publishing private images without consent.</p></div>
+      <div class="law-item"><span class="code">SEC. 67 / 67A / 67B</span><p>Publishing obscene, sexually explicit, or child sexual abuse material — the most severely punished offences in the Act.</p></div>
+      <div class="law-item"><span class="code">SEC. 66F</span><p>Cyber terrorism — attacks aimed at India's unity, security, or sovereignty. Among the harshest sentences on the books.</p></div>
+      <div class="law-item"><span class="code">SEC. 75</span><p>Extends the Act beyond India's borders when a crime touches a computer system located in India.</p></div>
+    </div>
+    <div class="law-col">
+      <h4>INDIA — DPDP ACT, 2023 &amp; GLOBAL FRAMEWORKS</h4>
+      <div class="law-item"><span class="code">DPDP ACT</span><p>Gives you rights to access, correct, and erase your personal data, and requires organisations to have a lawful basis to process it. Penalties for misuse can run into hundreds of crores. Full enforcement is being phased in toward 2027.</p></div>
+      <div class="law-item"><span class="code">GDPR (EU / UK)</span><p>Strong data rights — access, erasure, portability — for anyone whose data is handled by a company serving the EU/UK, regardless of where that company is based.</p></div>
+      <div class="law-item"><span class="code">CFAA (USA)</span><p>The main U.S. anti-hacking statute, criminalising unauthorised access to protected computers. Penalties range from misdemeanours to years in prison depending on intent and harm.</p></div>
+      <div class="law-item"><span class="code">BUDAPEST CONVENTION</span><p>The most widely adopted cybercrime treaty, ratified by 80+ countries, standardising how illegal access, fraud, and CSAM offences are prosecuted and investigated across borders. India has not signed on, but cooperates through its own laws.</p></div>
+    </div>
+  </div>
+  <div class="note-box" style="margin-top:1px;">The same laws that protect you as a victim apply to your own conduct too — attempting to "hack back," scrape data without permission, or share intimate images without consent carries real, prosecutable consequences.</div>
+</section>
+
+<!-- ============ HELPLINE ============ -->
+<section id="help">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">07 // INCIDENT RESPONSE</div>
+      <div class="sec-title">If something's already gone wrong</div>
+    </div>
+    <div class="sec-sub">Speed matters far more than perfection. Report early — funds can sometimes still be frozen in the first golden hours.</div>
+  </div>
+
+  <div class="helpline-banner">
+    <div>
+      <div class="num">1930</div>
+      <div class="lbl">INDIA NATIONAL CYBERCRIME HELPLINE — 24/7</div>
+    </div>
+    <div>
+      <div class="lbl" style="margin-bottom:6px;">FILE A COMPLAINT ONLINE</div>
+      <a href="https://cybercrime.gov.in" target="_blank" rel="noopener" class="btn">cybercrime.gov.in →</a>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);max-width:260px;">Your local police cyber cell and the Indian Cyber Crime Coordination Centre (I4C) also handle these cases directly.</div>
+  </div>
+
+  <div class="steps-list">
+    <div class="step-item"><b>Freeze first.</b> Call 1930 immediately for financial fraud — quick action can still stop a transfer in progress.</div>
+    <div class="step-item"><b>Lock down accounts.</b> Change passwords and enable app-based two-factor authentication on anything that might be exposed.</div>
+    <div class="step-item"><b>Save the evidence.</b> Screenshot messages, links, and transaction IDs before anything can be deleted or edited.</div>
+    <div class="step-item"><b>File officially.</b> Report through cybercrime.gov.in or your local cyber cell — verbal complaints alone rarely trigger action.</div>
+    <div class="step-item"><b>Alert your bank.</b> Notify them directly for card or account-linked fraud, in parallel with the police report.</div>
+    <div class="step-item"><b>Warn your circle.</b> If a social account was hijacked, tell your contacts before the attacker tries to scam them too.</div>
+  </div>
+</section>
+
+<!-- ============ CHECKLIST ============ -->
+<section id="checklist">
+  <div class="sec-head">
+    <div>
+      <div class="sec-tag">08 // DAILY PROTOCOL</div>
+      <div class="sec-title">The habits that cover most of it</div>
+    </div>
+    <div class="sec-sub">You don't need expensive tools. Consistency with a handful of habits handles the majority of what actually reaches ordinary people.</div>
+  </div>
+  <div class="checklist">
+    <div class="item">Use a password manager, or at least unique passwords everywhere</div>
+    <div class="item">Turn on app-based two-factor authentication for email, banking, social</div>
+    <div class="item">Prefer mobile data over public Wi-Fi for anything sensitive</div>
+    <div class="item">Use a reputable VPN when public Wi-Fi is the only option</div>
+    <div class="item">Avoid public USB charging ports — bring your own charger</div>
+    <div class="item">Keep Bluetooth and AirDrop off unless actively in use</div>
+    <div class="item">Change default passwords on every smart home device</div>
+    <div class="item">Never share an OTP with anyone who calls or messages you</div>
+    <div class="item">Set social profiles to private and trim your friends list</div>
+    <div class="item">Install OS and app updates as soon as they're offered</div>
+    <div class="item">Keep backups of important files, both cloud and offline</div>
+    <div class="item">Know your local helpline before you ever need it</div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-logo">fsociety.awareness // 2026</div>
+  <div style="font-size:11px;color:var(--text-dim);">Sources: Verizon DBIR · IBM Cost of a Data Breach · UK NCSC · US CISA / FBI IC3 / FTC · Indian IT Act 2000 &amp; DPDP Act 2023 · Council of Europe Budapest Convention</div>
+  <p class="foot-note">Prepared for general public awareness. This is not legal advice — for a specific situation, consult a qualified professional or the relevant official agency.</p>
+</footer>
+
+<script>
+// ---------- custom cursor ----------
+const dot = document.getElementById('cursor-dot');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+window.addEventListener('mousemove', e=>{
+  mx=e.clientX; my=e.clientY;
+  dot.style.left=mx+'px'; dot.style.top=my+'px';
+});
+function loop(){
+  rx += (mx-rx)*0.18; ry += (my-ry)*0.18;
+  ring.style.left=rx+'px'; ring.style.top=ry+'px';
+  requestAnimationFrame(loop);
+}
+loop();
+document.querySelectorAll('a,button,.btn').forEach(el=>{
+  el.addEventListener('mouseenter', ()=>document.body.classList.add('cursor-active'));
+  el.addEventListener('mouseleave', ()=>document.body.classList.remove('cursor-active'));
+});
+
+// ---------- hero video sound toggle ----------
+const heroVideo = document.getElementById('heroVideo');
+const soundToggle = document.getElementById('soundToggle');
+soundToggle.addEventListener('click', ()=>{
+  heroVideo.muted = !heroVideo.muted;
+  if(!heroVideo.muted){
+    heroVideo.play().catch(()=>{});
+    soundToggle.textContent = '🔊 MUTE';
+  } else {
+    soundToggle.textContent = '🔇 ENABLE SOUND';
+  }
+});
+</script>
+</body>
+</html>
