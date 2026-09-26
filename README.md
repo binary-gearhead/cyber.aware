@@ -1,2 +1,2 @@
-# cyber.aware
-cybersec sawareness website
+# cyberaware
+cyberaware101.netlify.app
